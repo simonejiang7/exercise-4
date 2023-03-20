@@ -1,0 +1,8 @@
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+
+SELECT DISTINCT ?person1 ?person2
+WHERE {
+  ?person a foaf:Person.
+  ?person foaf:knows ?person1.
+  ?person1 foaf:knows ?person2.
+}
