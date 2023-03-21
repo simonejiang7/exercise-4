@@ -10,6 +10,7 @@ import java.net.HttpURLConnection;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
@@ -99,14 +100,18 @@ public class Pod extends Artifact {
         log("2. Implement the method publishData()");
         
         String fileURL = podURL + containerName + "/" + fileName;
+        String containerURL = podURL + containerName + "/";
 
         StringBuilder dataStringBuilder = new StringBuilder();
         for (Object item : data) {
             dataStringBuilder.append(item.toString());
+            dataStringBuilder.append("\r");
         }
+
         String dataString = dataStringBuilder.toString();
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+
             HttpPut httpPut = new HttpPut(fileURL);
             httpPut.setHeader("Content-Type", "text/plain");
             HttpEntity entity = new StringEntity(dataString, ContentType.create("text/plain", "UTF-8"));
@@ -145,22 +150,30 @@ public class Pod extends Artifact {
    * @return An array whose elements are the data read from the .txt file
    */
     public Object[] readData(String containerName, String fileName) {
-        log("3. Implement the method readData(). Currently, the method returns mock data");
+        log("3. Implement the method readData().");
 
-        // Remove the following mock responses once you have implemented the method
-        switch(fileName) {
-            case "watchlist.txt":
-                Object[] mockWatchlist = new Object[]{"The Matrix", "Inception", "Avengers: Endgame"};
-                return mockWatchlist;
-            case "sleep.txt":
-                Object[] mockSleepData = new Object[]{"6", "7", "5"};
-                return mockSleepData;
-            case "trail.txt":
-                Object[] mockTrailData = new Object[]{"3", "5.5", "5.5"};
-                return mockTrailData; 
-            default:
-                return new Object[0];
+        String containerURL = podURL + containerName + "/";      
+        String fileURL = containerURL + fileName;   
+        Object[] returnData = new Object[0];                 
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpGet httpGet = new HttpGet(fileURL);
+            httpGet.setHeader("Accept", "text/plain");
+
+            try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+                int statusCode = response.getStatusLine().getStatusCode();
+                String responseBody = EntityUtils.toString(response.getEntity());
+
+                System.out.println("Status Code: " + statusCode);
+                System.out.println("Response Body: " + responseBody);
+
+                returnData = responseBody.split("\r");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        log("File retrieved: " + fileURL);
+        return returnData;
 
     }
 
@@ -205,6 +218,9 @@ public class Pod extends Artifact {
         Object[] allData = new Object[oldData.length + data.length];
         System.arraycopy(oldData, 0, allData, 0, oldData.length);
         System.arraycopy(data, 0, allData, oldData.length, data.length);
+        for (Object obj : allData) {
+            System.out.println("DEBUG all data: "+ obj);
+        }
         publishData(containerName, fileName, allData);
     }
 }
