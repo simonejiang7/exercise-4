@@ -5,15 +5,26 @@ import cartago.OPERATION;
 import cartago.OpFeedbackParam;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
 
 
 
@@ -65,7 +76,6 @@ public class Pod extends Artifact {
             // test
             // HttpGet httpGet = new HttpGet(podURL);
 
-
             try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
                 int statusCode = response.getStatusLine().getStatusCode();
                 String responseBody = EntityUtils.toString(response.getEntity());
@@ -100,9 +110,35 @@ public class Pod extends Artifact {
    * @param data An array of Object data that will be stored in the .txt file
    */
     @OPERATION
+    // performs an action that publishes movies in an LDP container personal data within a file watchlist.txt
     public void publishData(String containerName, String fileName, Object[] data) {
         log("2. Implement the method publishData()");
-    }
+        String fileURL = podURL + containerName + "test" + "/" + fileName;
+
+        StringBuilder dataStringBuilder = new StringBuilder();
+        for (Object item : data) {
+            dataStringBuilder.append(item.toString());
+        }
+        String dataString = dataStringBuilder.toString();
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPut httpPut = new HttpPut(fileURL);
+            httpPut.setHeader("Content-Type", "text/plain");
+            HttpEntity entity = new StringEntity(dataString, ContentType.create("text/plain", "UTF-8"));
+            httpPut.setEntity(entity);
+
+            try (CloseableHttpResponse response = httpClient.execute(httpPut)) {
+                int statusCode = response.getStatusLine().getStatusCode();
+                String responseBody = EntityUtils.toString(response.getEntity());
+
+                System.out.println("Status Code: " + statusCode);
+                System.out.println("Response Body: " + responseBody);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        log("File created: " + fileURL);
+}
 
   /**
    * CArtAgO operation for reading data of a .txt file in a Linked Data Platform container of the Solid pod
