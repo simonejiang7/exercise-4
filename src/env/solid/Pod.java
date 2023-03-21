@@ -56,27 +56,27 @@ public class Pod extends Artifact {
     // performs an action that creates an LDP container "personal-data" using the Pod artifact
     public void createContainer(String containerName) {
         log("1. Implement the method createContainer()");
-        String containerURL = podURL + containerName + "/";
+        String containerURL = podURL + "/" + containerName + "/";
+        containerName = containerName + "/";
         String containerMetadata = "@prefix ldp: <http://www.w3.org/ns/ldp#> .\n" +
-                                    "@prefix dcterms: <http://purl.org/dc/terms/> .\n" +
+                                    "@prefix dcterms: <http://purl.org/dc/terms/> .\n" + 
                                     "<> a ldp:Container, ldp:BasicContainer;\n" +
                                     "dcterms:title \"A new container\" ;\n" +
-                                    "dcterms:description \"This is a new container.\" .";
+                                    "dcterms:description \"This is a new container.\" .";                                
 
-        
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpPost httpPost = new HttpPost(podURL);
-            httpPost.setHeader("Content-Type", "text/turtle");
-            httpPost.setHeader("Link", "<http://www.w3.org/ns/ldp/BasicContainer>; rel=\"type\"");
-            httpPost.setHeader("Slug", containerName);
+            HttpPut httpPut = new HttpPut(containerURL);
+            httpPut.setHeader("Link", "<http://www.w3.org/ns/ldp/BasicContainer>");
+            httpPut.setHeader("Content-Type", "text/turtle");
+            // httpPut.setHeader("Slug", "test/");
 
             HttpEntity entity = new StringEntity(containerMetadata, ContentType.create("text/turtle", "UTF-8"));
-            httpPost.setEntity(entity);
+            httpPut.setEntity(entity);
 
             // test
             // HttpGet httpGet = new HttpGet(podURL);
 
-            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+            try (CloseableHttpResponse response = httpClient.execute(httpPut)) {
                 int statusCode = response.getStatusLine().getStatusCode();
                 String responseBody = EntityUtils.toString(response.getEntity());
 
@@ -113,7 +113,9 @@ public class Pod extends Artifact {
     // performs an action that publishes movies in an LDP container personal data within a file watchlist.txt
     public void publishData(String containerName, String fileName, Object[] data) {
         log("2. Implement the method publishData()");
-        String fileURL = podURL + containerName + "test" + "/" + fileName;
+        String containerURL = podURL + containerName;
+        String fileURL = podURL + containerName + "/" + fileName;
+        // String fileURL = podURL + containerName + "test" + "/" + fileName;
 
         StringBuilder dataStringBuilder = new StringBuilder();
         for (Object item : data) {
@@ -124,6 +126,7 @@ public class Pod extends Artifact {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             HttpPut httpPut = new HttpPut(fileURL);
             httpPut.setHeader("Content-Type", "text/plain");
+            // httpPost.setHeader("Slug", fileName);
             HttpEntity entity = new StringEntity(dataString, ContentType.create("text/plain", "UTF-8"));
             httpPut.setEntity(entity);
 
