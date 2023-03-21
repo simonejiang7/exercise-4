@@ -5,27 +5,16 @@ import cartago.OPERATION;
 import cartago.OpFeedbackParam;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.Scanner;
 
 
 
@@ -100,7 +89,6 @@ public class Pod extends Artifact {
         log("2. Implement the method publishData()");
         
         String fileURL = podURL + containerName + "/" + fileName;
-        String containerURL = podURL + containerName + "/";
 
         StringBuilder dataStringBuilder = new StringBuilder();
         for (Object item : data) {
@@ -218,9 +206,6 @@ public class Pod extends Artifact {
         Object[] allData = new Object[oldData.length + data.length];
         System.arraycopy(oldData, 0, allData, 0, oldData.length);
         System.arraycopy(data, 0, allData, oldData.length, data.length);
-        for (Object obj : allData) {
-            System.out.println("DEBUG all data: "+ obj);
-        }
         publishData(containerName, fileName, allData);
     }
 }
