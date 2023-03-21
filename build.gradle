@@ -26,6 +26,7 @@ repositories {
 
 dependencies {
     implementation('org.jacamo:jacamo:1.1')
+    implementation('org.apache.httpcomponents:httpclient:4.5')
 }
 
 sourceSets {

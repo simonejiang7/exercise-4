@@ -4,12 +4,26 @@ import cartago.Artifact;
 import cartago.OPERATION;
 import cartago.OpFeedbackParam;
 
+import java.io.IOException;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
+
+
 /**
  * A CArtAgO artifact that agent can use to interact with LDP containers in a Solid pod.
  */
 public class Pod extends Artifact {
 
     private String podURL; // the location of the Solid pod 
+    
 
   /**
    * Method called by CArtAgO to initialize the artifact. 
@@ -28,9 +42,55 @@ public class Pod extends Artifact {
    * 
    */
     @OPERATION
+    // performs an action that creates an LDP container "personal-data" using the Pod artifact
     public void createContainer(String containerName) {
         log("1. Implement the method createContainer()");
-    }
+        String containerURL = podURL + containerName + "/";
+        String containerMetadata = "@prefix ldp: <http://www.w3.org/ns/ldp#> .\n" +
+                                    "@prefix dcterms: <http://purl.org/dc/terms/> .\n" +
+                                    "<> a ldp:Container, ldp:BasicContainer;\n" +
+                                    "dcterms:title \"A new container\" ;\n" +
+                                    "dcterms:description \"This is a new container.\" .";
+
+        
+        try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+            HttpPost httpPost = new HttpPost(podURL);
+            httpPost.setHeader("Content-Type", "text/turtle");
+            httpPost.setHeader("Link", "<http://www.w3.org/ns/ldp/BasicContainer>; rel=\"type\"");
+            httpPost.setHeader("Slug", containerName);
+
+            HttpEntity entity = new StringEntity(containerMetadata, ContentType.create("text/turtle", "UTF-8"));
+            httpPost.setEntity(entity);
+
+            // test
+            // HttpGet httpGet = new HttpGet(podURL);
+
+
+            try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
+                int statusCode = response.getStatusLine().getStatusCode();
+                String responseBody = EntityUtils.toString(response.getEntity());
+
+                System.out.println("Status Code: " + statusCode);
+                System.out.println("Response Body: " + responseBody);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        log("Container created: " + containerURL);
+
+            // try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
+            //     int statusCode = response.getStatusLine().getStatusCode();
+            //     String responseBody = EntityUtils.toString(response.getEntity());
+
+            //     System.out.println("Status Code: " + statusCode);
+            //     System.out.println("Response Body: " + responseBody);
+            //     }
+            // } catch (IOException e) {
+            //     e.printStackTrace();
+            // }
+        }
+
 
   /**
    * CArtAgO operation for publishing data within a .txt file in a Linked Data Platform container of the Solid pod
